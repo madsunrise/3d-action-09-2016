@@ -1,24 +1,29 @@
 package ru.javajava.model;
 
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class UserProfile {
     private final String login;
     private final String email;
-    private final String password;
-    private int amount = 1;
+    private String password;
+    private int visits;
+    private int rating;
+    private long id;
 
-    private static final AtomicLong ID_GENETATOR = new AtomicLong(0);
-    private final long id;
+    private final AtomicInteger visitsGenerator;
 
 
+    public UserProfile(String login, String password, String email) {
+        this(login, password, email, 1);
+    }
 
-    public UserProfile(String login, String email, String password) {
+    public UserProfile(String login, String password, String email, int visits) {
         this.login = login;
-        this.email = email;
         this.password = password;
-        this.id = ID_GENETATOR.getAndIncrement();
+        this.email = email;
+        this.visits = visits;
+        visitsGenerator = new AtomicInteger(visits + 1);
     }
 
     public String getLogin() {
@@ -29,19 +34,39 @@ public class UserProfile {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public String getEmail() {
         return email;
     }
 
-    public void incrementAmount() {
-        amount++;
+    public int getVisits() {
+        return visits;
     }
 
-    public int getAmount() {
-        return amount;
+    public void setVisits(int visits) {
+        this.visits = visits;
+    }
+
+    public void incrementVisits() {
+        visits = visitsGenerator.getAndIncrement();
     }
 
     public long getId() {
         return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
     }
 }

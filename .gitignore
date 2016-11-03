@@ -3,10 +3,8 @@
 /target/
 
 .idea/*
-!.idea/inspectionProfiles
-.idea/inspectionProfiles/*
-!.idea/inspectionProfiles/Project_Default.xml
 
+/src/main/resources/application.properties
 
 ### Java ###
 *.class
