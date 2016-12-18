@@ -3,9 +3,12 @@ package ru.javajava.main;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,16 +51,16 @@ public class RegistrationController {
             return ResponseEntity.ok(new ErrorResponse(HttpStatus.CONFLICT, "This login is already taken"));
         }
 
+        final String hashedPassword = passwordEncoder().encode(password);
         final UserProfile newUser;
         try {
-            newUser = accountService.addUser(login, password, email);
-        }
-        catch (DuplicateKeyException e) {
+            newUser = accountService.addUser(login, hashedPassword, email);
+        } catch (DuplicateKeyException e) {
             LOGGER.info("Registration failed because user with email already exists", email);
             return ResponseEntity.ok(new ErrorResponse(HttpStatus.CONFLICT, "This email is already taken"));
         }
-        final String sessionId = httpSession.getId();
-        httpSession.setAttribute(sessionId, newUser.getId());
+
+        httpSession.setAttribute("userId", newUser.getId());
         LOGGER.info("Creating new user \"{}\" is successful", login);
         return ResponseEntity.ok(new SuccessSignupResponse(login, email));
     }
@@ -81,11 +84,10 @@ public class RegistrationController {
             return ResponseEntity.ok(new ErrorResponse(HttpStatus.NOT_FOUND, "User not found"));
         }
 
-        if (user.getPassword().equals(password)) {
+        if (passwordEncoder().matches(password, user.getPassword())) {
             accountService.incrementVisits(user.getId());
             user.incrementVisits();
-            final String sessionId = httpSession.getId();
-            httpSession.setAttribute(sessionId, user.getId());
+            httpSession.setAttribute("userId", user.getId());
             LOGGER.info("Authorization OK for user {}", login);
             return ResponseEntity.ok(new SuccessLoginResponse(login, user.getEmail(), user.getVisits()));
         }
@@ -95,13 +97,34 @@ public class RegistrationController {
     }
 
     @RequestMapping(path = "/api/logout", method = RequestMethod.POST)
-    public HttpStatus logout(HttpSession httpSession) {
-        final String sessionId = httpSession.getId();
-        httpSession.removeAttribute(sessionId);
-        LOGGER.info("Log out OK");
-        return HttpStatus.OK;
+    public ResponseEntity logout(HttpSession httpSession) {
+        if  (httpSession.getAttribute("userId") != null) {
+            httpSession.removeAttribute("userId");
+            LOGGER.info("Log out OK");
+            return ResponseEntity.ok(true);
+        }
+        else {
+            LOGGER.error("Log out for not authenticated user");
+            return ResponseEntity.ok(false);
+        }
     }
 
+
+    @RequestMapping(path = "/api/isauth", method = RequestMethod.POST)
+    public ResponseEntity isAuth(HttpSession httpSession) {
+        final Long isAuth = (Long) httpSession.getAttribute("userId");
+        if (isAuth != null) {
+            return ResponseEntity.ok(true);
+        } else {
+            return ResponseEntity.ok(false);
+        }
+    }
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     private static final class SuccessSignupResponse {
         private final String login;
@@ -199,4 +222,5 @@ public class RegistrationController {
             return email;
         }
     }
+    
 }

@@ -1,6 +1,5 @@
 package ru.javajava.exceptions;
 
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +11,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  */
 @ControllerAdvice
 public class ExceptionHandlerAdvice {
-
-
 
     @ExceptionHandler(EmptyResultDataAccessException.class)
     public ResponseEntity handle(EmptyResultDataAccessException e) {
