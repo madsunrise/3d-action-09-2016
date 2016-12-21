@@ -13,14 +13,11 @@ import java.util.Set;
 public class ServerPlayerSnap {
     @JsonProperty("id")
     private long userId;
-    @JsonProperty("position")
     private Coords position;
-    @JsonProperty("hp")
     private int hp;
-    @JsonProperty("victims")
     private final Set<Long> victims = new HashSet<>();
-    @JsonProperty("scores")
     private int scores;
+
 
     public Coords getPosition() {
         return position;
